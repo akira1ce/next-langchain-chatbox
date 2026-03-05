@@ -59,7 +59,11 @@ export function Sidebar() {
                 ? "bg-accent text-accent-foreground"
                 : "text-muted-foreground",
             )}>
-            <MessageSquare className="h-4 w-4 shrink-0" />
+            {session.workflow ? (
+              <Workflow className="h-4 w-4 shrink-0 text-primary" />
+            ) : (
+              <MessageSquare className="h-4 w-4 shrink-0" />
+            )}
             <span className="flex-1 truncate">{session.title}</span>
             <button
               onClick={(e) => handleDelete(e, session.id)}

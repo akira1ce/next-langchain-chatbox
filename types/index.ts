@@ -1,5 +1,5 @@
 /** 服务商配置 */
-export interface ProviderConfig {
+export interface Provider {
   id: string; // "openai" | "anthropic" | "deepseek" | ...
   name: string; // 显示名
   apiKey: string;
@@ -27,12 +27,14 @@ export interface ProviderMeta {
 
 export type WorkflowNodeType = "llm";
 
-/** LLM 节点配置 */
+/** LLM 节点配置（provider 由前端选择时一并写入） */
 export interface LLMNodeData extends Record<string, unknown> {
   label: string;
   systemPrompt: string;
   providerId: string;
   modelId: string;
+  /** 前端选 provider 时将完整配置写入，后端直接取用 */
+  provider?: Provider;
 }
 
 /** 节点数据联合（后续可扩展更多节点类型） */
@@ -63,7 +65,7 @@ export interface WorkflowSession {
   updatedAt: number;
 }
 
-/** 前后端传输的工作流执行载荷 */
+/** 前后端传输的工作流执行载荷（provider 信息已内嵌在各节点 data 中） */
 export interface WorkflowPayload {
   nodes: Array<{
     id: string;
@@ -76,7 +78,6 @@ export interface WorkflowPayload {
     target: string;
   }>;
   input: string;
-  providerConfig: ProviderConfig;
 }
 
 /** ─── Chat ─── */
@@ -86,6 +87,8 @@ export interface ChatSession {
   id: string;
   title: string;
   modelId?: string;
+  /** 绑定的 workflow（存在时走 workflow 执行策略） */
+  workflow?: WorkflowSession;
   createdAt: number;
   updatedAt: number;
   messages: import("@ai-sdk/react").UIMessage[];

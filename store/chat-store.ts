@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ChatSession } from "@/types";
+import type { ChatSession, WorkflowSession } from "@/types";
 import type { UIMessage } from "@ai-sdk/react";
 
 interface ChatState {
@@ -21,13 +21,17 @@ export const useChatStore = create<ChatState>()(
 const set = useChatStore.setState;
 
 export const chatActions = {
-  createSession: (modelId?: string) => {
+  createSession: (opts?: {
+    modelId?: string;
+    workflow?: WorkflowSession;
+  }) => {
     const id = crypto.randomUUID();
     const now = Date.now();
     const session: ChatSession = {
       id,
-      title: "New Chat",
-      modelId,
+      title: opts?.workflow?.title ?? "New Chat",
+      modelId: opts?.modelId,
+      workflow: opts?.workflow,
       createdAt: now,
       updatedAt: now,
       messages: [],

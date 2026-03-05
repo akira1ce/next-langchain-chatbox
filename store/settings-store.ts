@@ -1,15 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ProviderConfig, ModelOption } from "@/types";
+import type { Provider, ModelOption } from "@/types";
 import { PROVIDERS } from "@/lib/providers";
 
 interface SettingsState {
   /** 用户配置的服务商列表 */
-  providers: ProviderConfig[];
+  providers: Provider[];
 }
 
 /** 从内置元数据生成默认服务商配置 */
-const defaultProviders: ProviderConfig[] = PROVIDERS.map((p) => ({
+const defaultProviders: Provider[] = PROVIDERS.map((p) => ({
   id: p.id,
   name: p.name,
   apiKey: "",
@@ -28,7 +28,7 @@ const set = useSettingsStore.setState;
 
 export const settingsActions = {
   /** 更新某个服务商的配置 */
-  updateProvider: (id: string, patch: Partial<Omit<ProviderConfig, "models">>) =>
+  updateProvider: (id: string, patch: Partial<Omit<Provider, "models">>) =>
     set((state) => ({
       providers: state.providers.map((p) => (p.id === id ? { ...p, ...patch } : p)),
     })),

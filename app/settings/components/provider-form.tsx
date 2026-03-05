@@ -17,10 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, X, RotateCcw, Loader2, Zap } from "lucide-react";
-import type { ProviderConfig } from "@/types";
+import type { Provider } from "@/types";
 
 interface ProviderFormProps {
-  provider: ProviderConfig;
+  provider: Provider;
 }
 
 export function ProviderForm({ provider }: ProviderFormProps) {
@@ -74,7 +74,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          providerConfig: provider,
+          provider: provider,
           modelId: testModelId || provider.models[0]?.id,
         }),
       });

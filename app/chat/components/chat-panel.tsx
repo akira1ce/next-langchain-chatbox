@@ -6,11 +6,12 @@ import { DefaultChatTransport } from "ai";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { MessageItem } from "@/app/chat/components/message-item";
 import { ModelSelector } from "@/app/settings/components/model-selector";
 import { useSettingsStore } from "@/store/settings-store";
 import { useChatStore, chatActions } from "@/store/chat-store";
-import { Send } from "lucide-react";
+import { Send, Workflow } from "lucide-react";
 
 export function ChatPanel() {
   const [input, setInput] = useState("");
@@ -18,14 +19,16 @@ export function ChatPanel() {
   const prevStatusRef = useRef<string>("");
 
   const providers = useSettingsStore((s) => s.providers);
-
   const { activeSessionId, sessions } = useChatStore();
 
   const currentSession = sessions.find((s) => s.id === activeSessionId);
   const sessionModelId = currentSession?.modelId ?? "";
+  const boundWorkflow = currentSession?.workflow;
+  const isWorkflowMode = !!boundWorkflow?.nodes?.length;
 
-  // 从 session 的 modelId 找到对应 provider
-  const providerConfig = providers.find((p) => p.models.some((m) => m.id === sessionModelId));
+  const provider = isWorkflowMode
+    ? null
+    : providers.find((p) => p.models.some((m) => m.id === sessionModelId));
 
   const handleModelChange = (modelId: string) => {
     if (activeSessionId) {
@@ -38,16 +41,20 @@ export function ChatPanel() {
       new DefaultChatTransport({
         api: "/api/chat",
         body: () => {
-          const session = useChatStore
-            .getState()
-            .sessions.find((s) => s.id === useChatStore.getState().activeSessionId);
+          const chatState = useChatStore.getState();
+          const session = chatState.sessions.find((s) => s.id === chatState.activeSessionId);
           const mid = session?.modelId ?? "";
-          return {
-            providerConfig: useSettingsStore
-              .getState()
-              .providers.find((p) => p.models.some((m) => m.id === mid)),
-            modelId: mid,
-          };
+          const wf = session?.workflow;
+          const isWf = !!wf?.nodes?.length;
+
+          if (isWf) {
+            return { workflow: wf };
+          }
+
+          const settingsState = useSettingsStore.getState();
+          const pc = settingsState.providers.find((p) => p.models.some((m) => m.id === mid));
+
+          return { provider: pc, modelId: mid };
         },
       }),
     [],
@@ -59,7 +66,6 @@ export function ChatPanel() {
     messages: currentSession?.messages,
   });
 
-  // 流式结束后持久化消息（status 从 streaming/submitted → ready）
   useEffect(() => {
     const wasStreaming =
       prevStatusRef.current === "streaming" || prevStatusRef.current === "submitted";
@@ -71,17 +77,17 @@ export function ChatPanel() {
 
   const isStreaming = status === "streaming" || status === "submitted";
 
-  // 自动滚动到底部
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
+  const noProvider = !isWorkflowMode && !provider?.apiKey;
+
   const handleSubmit = () => {
     const text = input.trim();
-    if (!text || isStreaming) return;
-    if (!providerConfig?.apiKey) return;
+    if (!text || isStreaming || noProvider) return;
 
     sendMessage({ text });
     setInput("");
@@ -94,8 +100,6 @@ export function ChatPanel() {
     }
   };
 
-  const noProvider = !providerConfig?.apiKey;
-
   if (!currentSession) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -106,19 +110,28 @@ export function ChatPanel() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* 顶部：模型选择 */}
-      <div className="flex items-center border-b px-4 py-2 h-14">
-        <ModelSelector value={sessionModelId} onValueChange={handleModelChange} />
+      {/* 顶部 */}
+      <div className="flex items-center gap-3 border-b px-4 py-2 h-14">
+        {isWorkflowMode ? (
+          <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+            <Workflow className="h-3.5 w-3.5" />
+            {boundWorkflow.title}
+          </Badge>
+        ) : (
+          <ModelSelector value={sessionModelId} onValueChange={handleModelChange} />
+        )}
       </div>
 
-      {/* 中间：消息列表 */}
-      <ScrollArea className="flex-1" ref={scrollRef}>
+      {/* 消息列表 */}
+      <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
         <div className="mx-auto max-w-3xl py-4">
           {messages.length === 0 && (
-            <div className="flex h-[50vh] items-center justify-center text-muted-foreground">
+            <div className="flex h-[50vh] items-center justify-center text-muted-foreground text-center">
               {noProvider
                 ? "Please configure a provider API key in Settings first."
-                : "Send a message to start chatting."}
+                : isWorkflowMode
+                  ? `发送消息以运行「${boundWorkflow.title}」工作流`
+                  : "Send a message to start chatting."}
             </div>
           )}
           {messages.map((msg) => (
@@ -127,14 +140,20 @@ export function ChatPanel() {
         </div>
       </ScrollArea>
 
-      {/* 底部：输入框 */}
-      <div className="border-t p-4">
+      {/* 输入框 */}
+      <div className="border-t  p-4 shrink-0">
         <div className="mx-auto flex max-w-3xl gap-2">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={noProvider ? "Configure a provider first..." : "Type a message..."}
+            placeholder={
+              noProvider
+                ? "Configure a provider first..."
+                : isWorkflowMode
+                  ? "输入内容运行工作流..."
+                  : "Type a message..."
+            }
             disabled={noProvider}
             rows={1}
             className="min-h-[40px] max-h-[120px] resize-none"

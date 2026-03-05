@@ -24,13 +24,15 @@ export function LLMConfig({ nodeId, data }: LLMConfigProps) {
   const enabledProviders = providers.filter((p) => p.enabled && p.apiKey);
   const { updateNodeData } = useEditorActions();
 
-  const selectedProvider = enabledProviders.find(
-    (p) => p.id === data.providerId,
-  );
+  const selectedProvider = enabledProviders.find((p) => p.id === data.providerId);
   const availableModels = selectedProvider?.models ?? [];
 
-  const update = (patch: Partial<LLMNodeData>) =>
-    updateNodeData(nodeId, patch);
+  const update = (patch: Partial<LLMNodeData>) => updateNodeData(nodeId, patch);
+
+  const handleProviderChange = (providerId: string) => {
+    const provider = enabledProviders.find((p) => p.id === providerId);
+    update({ providerId, modelId: "", provider });
+  };
 
   return (
     <>
@@ -47,8 +49,7 @@ export function LLMConfig({ nodeId, data }: LLMConfigProps) {
         <Label htmlFor="node-provider">Provider</Label>
         <Select
           value={data.providerId}
-          onValueChange={(v) => update({ providerId: v, modelId: "" })}
-        >
+          onValueChange={handleProviderChange}>
           <SelectTrigger id="node-provider">
             <SelectValue placeholder="Select provider" />
           </SelectTrigger>
@@ -67,8 +68,7 @@ export function LLMConfig({ nodeId, data }: LLMConfigProps) {
         <Select
           value={data.modelId}
           onValueChange={(v) => update({ modelId: v })}
-          disabled={!availableModels.length}
-        >
+          disabled={!availableModels.length}>
           <SelectTrigger id="node-model">
             <SelectValue placeholder="Select model" />
           </SelectTrigger>
@@ -89,7 +89,9 @@ export function LLMConfig({ nodeId, data }: LLMConfigProps) {
           className="min-h-[120px] resize-y font-mono text-xs"
           value={data.systemPrompt}
           onChange={(e) => update({ systemPrompt: e.target.value })}
-          placeholder={"You are a helpful assistant.\n\nUse {{nodeId.output}} to reference other nodes."}
+          placeholder={
+            "You are a helpful assistant.\n\nUse {{nodeId.output}} to reference other nodes."
+          }
         />
       </div>
     </>
