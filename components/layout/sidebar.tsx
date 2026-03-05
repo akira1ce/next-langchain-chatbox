@@ -4,34 +4,29 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { MessageSquare, Plus, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useChatStore } from "@/store/chat-store";
+import { useChatStore, chatActions } from "@/store/chat-store";
 import { Button } from "@/components/ui/button";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const sessions = useChatStore((s) => s.sessions);
-  const activeSessionId = useChatStore((s) => s.activeSessionId);
-  const createSession = useChatStore((s) => s.createSession);
-  const setActiveSession = useChatStore((s) => s.setActiveSession);
-  const deleteSession = useChatStore((s) => s.deleteSession);
+  const { sessions, activeSessionId } = useChatStore();
 
   const sortedSessions = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt);
 
   const handleNewChat = () => {
-    createSession();
+    chatActions.createSession();
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    deleteSession(id);
+    chatActions.deleteSession(id);
   };
 
   const handleSessionClick = (id: string) => {
-    if (id === activeSessionId) return;
-    setActiveSession(id);
+    if (id !== activeSessionId) chatActions.setActiveSession(id);
     !isOnChat && router.push(`/chat`);
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MessageItem } from "@/components/chat/message-item";
 import { ModelSelector } from "@/components/settings/model-selector";
 import { useSettingsStore } from "@/store/settings-store";
-import { useChatStore } from "@/store/chat-store";
+import { useChatStore, chatActions } from "@/store/chat-store";
 import { Send } from "lucide-react";
 
 export function ChatPanel() {
@@ -19,10 +19,7 @@ export function ChatPanel() {
 
   const providers = useSettingsStore((s) => s.providers);
 
-  const activeSessionId = useChatStore((s) => s.activeSessionId);
-  const sessions = useChatStore((s) => s.sessions);
-  const updateMessages = useChatStore((s) => s.updateMessages);
-  const updateModelId = useChatStore((s) => s.updateModelId);
+  const { activeSessionId, sessions } = useChatStore();
 
   const currentSession = sessions.find((s) => s.id === activeSessionId);
   const sessionModelId = currentSession?.modelId ?? "";
@@ -32,7 +29,7 @@ export function ChatPanel() {
 
   const handleModelChange = (modelId: string) => {
     if (activeSessionId) {
-      updateModelId(activeSessionId, modelId);
+      chatActions.updateModelId(activeSessionId, modelId);
     }
   };
 
@@ -67,10 +64,10 @@ export function ChatPanel() {
     const wasStreaming =
       prevStatusRef.current === "streaming" || prevStatusRef.current === "submitted";
     if (wasStreaming && status === "ready" && activeSessionId) {
-      updateMessages(activeSessionId, messages);
+      chatActions.updateMessages(activeSessionId, messages);
     }
     prevStatusRef.current = status;
-  }, [status, activeSessionId, messages, updateMessages]);
+  }, [status, activeSessionId, messages]);
 
   const isStreaming = status === "streaming" || status === "submitted";
 

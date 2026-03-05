@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSettingsStore } from "@/store/settings-store";
+import { useSettingsStore, settingsActions } from "@/store/settings-store";
 import { PROVIDERS } from "@/lib/providers";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,11 +24,6 @@ interface ProviderFormProps {
 }
 
 export function ProviderForm({ provider }: ProviderFormProps) {
-  const updateProvider = useSettingsStore((s) => s.updateProvider);
-  const addModel = useSettingsStore((s) => s.addModel);
-  const removeModel = useSettingsStore((s) => s.removeModel);
-  const updateModel = useSettingsStore((s) => s.updateModel);
-
   const [newModelId, setNewModelId] = useState("");
   const [newModelName, setNewModelName] = useState("");
 
@@ -49,7 +44,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
     if (!id) return;
     if (provider.models.some((m) => m.id === id)) return;
 
-    addModel(provider.id, { id, name, providerId: provider.id });
+    settingsActions.addModel(provider.id, { id, name, providerId: provider.id });
     setNewModelId("");
     setNewModelName("");
   };
@@ -63,7 +58,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
       const newModels = [...meta.models, ...customModels];
       useSettingsStore.setState((state) => ({
         providers: state.providers.map((p) =>
-          p.id === provider.id ? { ...p, models: newModels } : p
+          p.id === provider.id ? { ...p, models: newModels } : p,
         ),
       }));
     }
@@ -86,9 +81,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
       const data = await res.json();
       setTestResult({
         ok: data.ok,
-        message: data.ok
-          ? "Connected successfully!"
-          : `Failed: ${data.error}`,
+        message: data.ok ? "Connected successfully!" : `Failed: ${data.error}`,
       });
     } catch (err) {
       setTestResult({
@@ -121,9 +114,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
           <Switch
             id={`enabled-${provider.id}`}
             checked={provider.enabled}
-            onCheckedChange={(enabled) =>
-              updateProvider(provider.id, { enabled })
-            }
+            onCheckedChange={(enabled) => settingsActions.updateProvider(provider.id, { enabled })}
           />
         </div>
       </div>
@@ -138,7 +129,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
             placeholder="sk-..."
             value={provider.apiKey}
             onChange={(e) =>
-              updateProvider(provider.id, { apiKey: e.target.value })
+              settingsActions.updateProvider(provider.id, { apiKey: e.target.value })
             }
           />
         </div>
@@ -151,14 +142,10 @@ export function ProviderForm({ provider }: ProviderFormProps) {
             placeholder={meta?.defaultBaseURL}
             value={provider.baseURL ?? ""}
             onChange={(e) =>
-              updateProvider(provider.id, { baseURL: e.target.value })
+              settingsActions.updateProvider(provider.id, { baseURL: e.target.value })
             }
           />
-          {meta && (
-            <p className="text-xs text-muted-foreground">
-              Default: {meta.defaultBaseURL}
-            </p>
-          )}
+          {meta && <p className="text-xs text-muted-foreground">Default: {meta.defaultBaseURL}</p>}
         </div>
 
         {/* 连通性测试 */}
@@ -167,8 +154,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
             <Select
               value={testModelId}
               onValueChange={setTestModelId}
-              disabled={testing || provider.models.length === 0}
-            >
+              disabled={testing || provider.models.length === 0}>
               <SelectTrigger className="h-8 w-52 text-sm">
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
@@ -184,8 +170,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
               variant="outline"
               size="sm"
               onClick={handleTestConnection}
-              disabled={testing || !provider.apiKey || !testModelId}
-            >
+              disabled={testing || !provider.apiKey || !testModelId}>
               {testing ? (
                 <Loader2 className="mr-1 h-3 w-3 animate-spin" />
               ) : (
@@ -195,11 +180,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
             </Button>
           </div>
           {testResult && (
-            <p
-              className={`text-sm ${
-                testResult.ok ? "text-green-600" : "text-destructive"
-              }`}
-            >
+            <p className={`text-sm ${testResult.ok ? "text-green-600" : "text-destructive"}`}>
               {testResult.message}
             </p>
           )}
@@ -223,22 +204,17 @@ export function ProviderForm({ provider }: ProviderFormProps) {
         {/* 模型列表 */}
         <div className="space-y-2">
           {provider.models.map((model) => (
-            <div
-              key={model.id}
-              className="flex items-center gap-2 rounded-md border px-3 py-2"
-            >
+            <div key={model.id} className="flex items-center gap-2 rounded-md border px-3 py-2">
               <div className="flex-1 min-w-0">
                 <Input
                   value={model.name}
                   onChange={(e) =>
-                    updateModel(provider.id, model.id, { name: e.target.value })
+                    settingsActions.updateModel(provider.id, model.id, { name: e.target.value })
                   }
                   className="h-7 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
                 />
               </div>
-              <code className="shrink-0 text-xs text-muted-foreground">
-                {model.id}
-              </code>
+              <code className="shrink-0 text-xs text-muted-foreground">{model.id}</code>
               {builtinIds.has(model.id) && (
                 <Badge variant="secondary" className="text-xs">
                   built-in
@@ -248,8 +224,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 shrink-0"
-                onClick={() => removeModel(provider.id, model.id)}
-              >
+                onClick={() => settingsActions.removeModel(provider.id, model.id)}>
                 <X className="h-3 w-3" />
               </Button>
             </div>
@@ -287,8 +262,7 @@ export function ProviderForm({ provider }: ProviderFormProps) {
             variant="outline"
             className="h-8"
             onClick={handleAddModel}
-            disabled={!newModelId.trim()}
-          >
+            disabled={!newModelId.trim()}>
             <Plus className="mr-1 h-3 w-3" />
             Add
           </Button>
@@ -302,11 +276,10 @@ export function ProviderForm({ provider }: ProviderFormProps) {
           variant="outline"
           size="sm"
           onClick={() =>
-            updateProvider(provider.id, {
+            settingsActions.updateProvider(provider.id, {
               baseURL: meta?.defaultBaseURL ?? "",
             })
-          }
-        >
+          }>
           Reset Base URL
         </Button>
       </div>
