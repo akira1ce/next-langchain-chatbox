@@ -30,14 +30,11 @@ export function ChatPanel() {
   // 从 session 的 modelId 找到对应 provider
   const providerConfig = providers.find((p) => p.models.some((m) => m.id === sessionModelId));
 
-  const handleModelChange = useCallback(
-    (modelId: string) => {
-      if (activeSessionId) {
-        updateModelId(activeSessionId, modelId);
-      }
-    },
-    [activeSessionId, updateModelId],
-  );
+  const handleModelChange = (modelId: string) => {
+    if (activeSessionId) {
+      updateModelId(activeSessionId, modelId);
+    }
+  };
 
   const transport = useMemo(
     () =>

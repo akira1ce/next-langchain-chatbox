@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { MessageSquare, Plus, Settings, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/chat-store";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const sessions = useChatStore((s) => s.sessions);
   const activeSessionId = useChatStore((s) => s.activeSessionId);
@@ -23,8 +24,15 @@ export function Sidebar() {
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
     e.stopPropagation();
     deleteSession(id);
+  };
+
+  const handleSessionClick = (id: string) => {
+    if (id === activeSessionId) return;
+    setActiveSession(id);
+    !isOnChat && router.push(`/chat`);
   };
 
   const isOnChat = pathname.startsWith("/chat");
@@ -46,10 +54,10 @@ export function Sidebar() {
       {/* 会话列表 */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
         {sortedSessions.map((session) => (
-          <Link
+          <div
             key={session.id}
-            href="/chat"
-            onClick={() => setActiveSession(session.id)}
+            // href="/chat"
+            onClick={() => handleSessionClick(session.id)}
             className={cn(
               "group flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent",
               isOnChat && activeSessionId === session.id
@@ -63,7 +71,7 @@ export function Sidebar() {
               className="hidden shrink-0 rounded p-0.5 hover:bg-destructive/20 group-hover:block">
               <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
             </button>
-          </Link>
+          </div>
         ))}
       </nav>
 
