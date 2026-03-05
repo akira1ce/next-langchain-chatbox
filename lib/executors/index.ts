@@ -1,6 +1,5 @@
 import type { WorkflowNodeType, WorkflowNodeData } from "@/types";
-// import { llmExecutor } from "./llm-executor";
-import { testExecutor } from "./test-executor";
+import { llmExecutor } from "./llm-executor";
 
 export interface ExecutionContext {
   input: string;
@@ -10,7 +9,7 @@ export interface ExecutionContext {
 export type NodeExecutor = (data: WorkflowNodeData, ctx: ExecutionContext) => Promise<string>;
 
 const executorRegistry: Record<WorkflowNodeType, NodeExecutor> = {
-  llm: testExecutor, // TODO: 测试完换回 llmExecutor
+  llm: llmExecutor,
 };
 
 export function getExecutor(type: WorkflowNodeType): NodeExecutor {
