@@ -23,6 +23,64 @@ export interface ProviderMeta {
   models: ModelOption[];
 }
 
+/** ─── Workflow ─── */
+
+export type WorkflowNodeType = "llm";
+
+/** LLM 节点配置 */
+export interface LLMNodeData extends Record<string, unknown> {
+  label: string;
+  systemPrompt: string;
+  providerId: string;
+  modelId: string;
+}
+
+/** 节点数据联合（后续可扩展更多节点类型） */
+export type WorkflowNodeData = LLMNodeData;
+
+/** 序列化的节点（用于持久化 & API 传输） */
+export interface SerializedNode {
+  id: string;
+  type: WorkflowNodeType;
+  position: { x: number; y: number };
+  data: WorkflowNodeData;
+}
+
+/** 序列化的边 */
+export interface SerializedEdge {
+  id: string;
+  source: string;
+  target: string;
+}
+
+/** 工作流会话（持久化） */
+export interface WorkflowSession {
+  id: string;
+  title: string;
+  nodes: SerializedNode[];
+  edges: SerializedEdge[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** 前后端传输的工作流执行载荷 */
+export interface WorkflowPayload {
+  nodes: Array<{
+    id: string;
+    type: WorkflowNodeType;
+    data: WorkflowNodeData;
+  }>;
+  edges: Array<{
+    id: string;
+    source: string;
+    target: string;
+  }>;
+  input: string;
+  providerConfig: ProviderConfig;
+}
+
+/** ─── Chat ─── */
+
 /** 聊天会话 */
 export interface ChatSession {
   id: string;

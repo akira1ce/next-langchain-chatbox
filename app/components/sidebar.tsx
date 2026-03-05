@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { MessageSquare, Plus, Settings, Trash2 } from "lucide-react";
+import { MessageSquare, Plus, Settings, Trash2, Workflow } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore, chatActions } from "@/store/chat-store";
 import { Button } from "@/components/ui/button";
@@ -70,8 +70,19 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* 底部 Settings */}
-      <div className=" p-2 ">
+      {/* 底部导航 */}
+      <div className="space-y-1 p-2">
+        <Link
+          href="/workflow"
+          className={cn(
+            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent",
+            pathname.startsWith("/workflow")
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground",
+          )}>
+          <Workflow className="h-4 w-4" />
+          Workflow
+        </Link>
         <Link
           href="/settings"
           className={cn(
