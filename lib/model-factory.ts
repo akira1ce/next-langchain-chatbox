@@ -1,43 +1,43 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import type { ProviderConfig } from "@/types";
+import type { Provider } from "@/types";
 
-type ModelFactory = (config: ProviderConfig, modelId: string) => BaseChatModel;
+type ModelFactory = (provider: Provider, modelId: string) => BaseChatModel;
 
 /** 服务商 → 模型构造器映射 */
 const providerRegistry: Record<string, ModelFactory> = {
-  openai: (config, modelId) =>
+  openai: (provider, modelId) =>
     new ChatOpenAI({
       model: modelId,
-      apiKey: config.apiKey,
-      configuration: { baseURL: config.baseURL },
+      apiKey: provider.apiKey,
+      configuration: { baseURL: provider.baseURL },
       streaming: true,
     }),
 
-  anthropic: (config, modelId) =>
+  anthropic: (provider, modelId) =>
     new ChatAnthropic({
       model: modelId,
-      anthropicApiKey: config.apiKey,
-      anthropicApiUrl: config.baseURL,
+      anthropicApiKey: provider.apiKey,
+      anthropicApiUrl: provider.baseURL,
       streaming: true,
     }),
 
   // DeepSeek 兼容 OpenAI 接口
-  deepseek: (config, modelId) =>
+  deepseek: (provider, modelId) =>
     new ChatOpenAI({
       model: modelId,
-      apiKey: config.apiKey,
-      configuration: { baseURL: config.baseURL },
+      apiKey: provider.apiKey,
+      configuration: { baseURL: provider.baseURL },
       streaming: true,
     }),
 };
 
 /** 根据服务商配置和模型 ID 创建 LangChain ChatModel */
-export function createModel(providerConfig: ProviderConfig, modelId: string): BaseChatModel {
-  const factory = providerRegistry[providerConfig.id];
+export function createModel(provider: Provider, modelId: string): BaseChatModel {
+  const factory = providerRegistry[provider.id];
   if (!factory) {
-    throw new Error(`Unknown provider: ${providerConfig.id}`);
+    throw new Error(`Unknown provider: ${provider.id}`);
   }
-  return factory(providerConfig, modelId);
+  return factory(provider, modelId);
 }
