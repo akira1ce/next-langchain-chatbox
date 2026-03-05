@@ -1,25 +1,22 @@
 import { NextRequest } from "next/server";
 import { HumanMessage } from "@langchain/core/messages";
 import { createModel } from "@/lib/model-factory";
-import type { ProviderConfig } from "@/types";
+import type { Provider } from "@/types";
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const { providerConfig, modelId } = (await req.json()) as {
-    providerConfig: ProviderConfig;
+  const { provider, modelId } = (await req.json()) as {
+    provider: Provider;
     modelId: string;
   };
 
-  if (!providerConfig?.id || !providerConfig?.apiKey || !modelId) {
-    return Response.json(
-      { ok: false, error: "Missing providerConfig or modelId" },
-      { status: 400 }
-    );
+  if (!provider?.id || !provider?.apiKey || !modelId) {
+    return Response.json({ ok: false, error: "Missing provider or modelId" }, { status: 400 });
   }
 
   try {
-    const model = createModel(providerConfig, modelId);
+    const model = createModel(provider, modelId);
     await model.invoke([new HumanMessage("Hi")]);
 
     return Response.json({ ok: true });
