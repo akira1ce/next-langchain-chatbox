@@ -12,7 +12,7 @@ import {
   type Connection,
 } from "@xyflow/react";
 import { useSyncExternalStore } from "react";
-import type { WorkflowNodeData, WorkflowSession, SerializedNode, SerializedEdge } from "@/types";
+import type { WorkflowNodeData, Workflow, SerializedNode, SerializedEdge } from "@/types";
 
 export type WorkflowNode = Node<WorkflowNodeData, "llm">;
 
@@ -30,7 +30,7 @@ interface EditorState {
 }
 
 interface EditorActions {
-  load: (session: WorkflowSession) => void;
+  load: (workflow: Workflow) => void;
   clear: () => void;
   snapshot: () => { nodes: SerializedNode[]; edges: SerializedEdge[] };
   onNodesChange: OnNodesChange;
@@ -66,14 +66,14 @@ function createEditorStore(): {
   let nodeCounter = 0;
 
   const actions: EditorActions = {
-    load: (session) => {
-      const nodes: WorkflowNode[] = session.nodes.map((n) => ({
+    load: (workflow) => {
+      const nodes: WorkflowNode[] = workflow.nodes.map((n) => ({
         id: n.id,
         type: n.type,
         position: n.position,
         data: n.data,
       }));
-      state = { nodes, edges: session.edges, selectedNodeId: null };
+      state = { nodes, edges: workflow.edges, selectedNodeId: null };
       emit();
     },
 

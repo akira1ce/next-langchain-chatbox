@@ -96,12 +96,9 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
     const { nodes, edges } = snapshot();
     workflowActions.saveSnapshot(workflowId, nodes, edges);
 
-    const freshWorkflow = {
-      ...currentWorkflow,
-      nodes,
-      edges,
-    };
-    chatActions.createSession({ workflow: freshWorkflow });
+    const freshWorkflow = { ...currentWorkflow, nodes, edges };
+
+    chatActions.createSession({ workflowId: freshWorkflow.id });
     router.push("/chat");
   };
 

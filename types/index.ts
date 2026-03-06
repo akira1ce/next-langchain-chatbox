@@ -1,4 +1,6 @@
-/** 服务商配置 */
+import { UIMessage } from "@ai-sdk/react";
+
+/** ─── Providers ─── */
 export interface Provider {
   id: string; // "openai" | "anthropic" | "deepseek" | ...
   name: string; // 显示名
@@ -28,7 +30,7 @@ export interface ProviderMeta {
 export type WorkflowNodeType = "llm";
 
 /** LLM 节点配置（provider 由前端选择时一并写入） */
-export interface LLMNodeData extends Record<string, unknown> {
+export interface LLMNodeData {
   label: string;
   systemPrompt: string;
   providerId: string;
@@ -41,7 +43,7 @@ export interface LLMNodeData extends Record<string, unknown> {
 export type WorkflowNodeData = LLMNodeData;
 
 /** 序列化的节点（用于持久化 & API 传输） */
-export interface SerializedNode {
+export interface WorkflowNode {
   id: string;
   type: WorkflowNodeType;
   position: { x: number; y: number };
@@ -49,35 +51,20 @@ export interface SerializedNode {
 }
 
 /** 序列化的边 */
-export interface SerializedEdge {
+export interface WorkflowEdge {
   id: string;
   source: string;
   target: string;
 }
 
-/** 工作流会话（持久化） */
-export interface WorkflowSession {
+/** 工作流配置 */
+export interface Workflow {
   id: string;
   title: string;
-  nodes: SerializedNode[];
-  edges: SerializedEdge[];
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
   createdAt: number;
   updatedAt: number;
-}
-
-/** 前后端传输的工作流执行载荷（provider 信息已内嵌在各节点 data 中） */
-export interface WorkflowPayload {
-  nodes: Array<{
-    id: string;
-    type: WorkflowNodeType;
-    data: WorkflowNodeData;
-  }>;
-  edges: Array<{
-    id: string;
-    source: string;
-    target: string;
-  }>;
-  input: string;
 }
 
 /** ─── Chat ─── */
@@ -87,9 +74,8 @@ export interface ChatSession {
   id: string;
   title: string;
   modelId?: string;
-  /** 绑定的 workflow（存在时走 workflow 执行策略） */
-  workflow?: WorkflowSession;
+  workflowId?: string;
   createdAt: number;
   updatedAt: number;
-  messages: import("@ai-sdk/react").UIMessage[];
+  messages: UIMessage[];
 }

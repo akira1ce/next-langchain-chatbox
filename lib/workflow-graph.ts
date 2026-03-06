@@ -1,13 +1,13 @@
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { getExecutor } from "@/lib/executors";
-import type { WorkflowPayload, WorkflowNodeType } from "@/types";
+import type { WorkflowNodeType, WorkflowEdge, WorkflowNode } from "@/types";
 
-function findSourceNodes(nodeIds: string[], edges: WorkflowPayload["edges"]): string[] {
+function findSourceNodes(nodeIds: string[], edges: WorkflowEdge[]): string[] {
   const targets = new Set(edges.map((e) => e.target));
   return nodeIds.filter((id) => !targets.has(id));
 }
 
-function findSinkNodes(nodeIds: string[], edges: WorkflowPayload["edges"]): string[] {
+function findSinkNodes(nodeIds: string[], edges: WorkflowEdge[]): string[] {
   const sources = new Set(edges.map((e) => e.source));
   return nodeIds.filter((id) => !sources.has(id));
 }
@@ -25,8 +25,8 @@ export const WorkflowState = Annotation.Root({
 });
 
 interface GraphInput {
-  nodes: WorkflowPayload["nodes"];
-  edges: WorkflowPayload["edges"];
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
 }
 
 export function buildGraph({ nodes, edges }: GraphInput) {

@@ -5,7 +5,7 @@ import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { createModel } from "@/lib/model-factory";
 import { buildGraph } from "@/lib/workflow-graph";
-import type { Provider, WorkflowSession } from "@/types";
+import type { Provider, Workflow } from "@/types";
 
 function extractText(msg: UIMessage): string {
   return msg.parts
@@ -49,7 +49,7 @@ async function handlePlainChat(messages: UIMessage[], provider: Provider, modelI
 }
 
 /** Workflow 驱动对话：取最新用户消息作为 input 执行图 */
-async function handleWorkflowChat(messages: UIMessage[], workflow: WorkflowSession) {
+async function handleWorkflowChat(messages: UIMessage[], workflow: Workflow) {
   const latestUserMsg = [...messages].reverse().find((m) => m.role === "user");
   const userInput = latestUserMsg ? extractText(latestUserMsg) : "";
 
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     messages: UIMessage[];
     provider?: Provider;
     modelId?: string;
-    workflow?: WorkflowSession;
+    workflow?: Workflow;
   };
 
   if (workflow?.nodes?.length) {

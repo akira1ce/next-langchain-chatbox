@@ -1,16 +1,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { WorkflowSession, SerializedNode, SerializedEdge } from "@/types";
+import type { Workflow, SerializedNode, SerializedEdge } from "@/types";
 
 interface WorkflowState {
-  workflows: WorkflowSession[];
+  workflows: Workflow[];
   activeWorkflowId: string | null;
 }
 
 export const useWorkflowStore = create<WorkflowState>()(
   persist(
     () => ({
-      workflows: [] as WorkflowSession[],
+      workflows: [] as Workflow[],
       activeWorkflowId: null as string | null,
     }),
     { name: "workflow-store" },
@@ -23,7 +23,7 @@ export const workflowActions = {
   create: (title = "New Workflow") => {
     const id = crypto.randomUUID();
     const now = Date.now();
-    const session: WorkflowSession = {
+    const session: Workflow = {
       id,
       title,
       nodes: [],

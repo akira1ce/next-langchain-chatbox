@@ -1,17 +1,24 @@
 import { NextRequest } from "next/server";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { buildGraph } from "@/lib/workflow-graph";
-import type { WorkflowPayload } from "@/types";
+import type { WorkflowEdge } from "@/types";
+import { WorkflowNode } from "@/app/workflow/components/editor-context";
+
+export interface WorkflowPayload {
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  input: string;
+}
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as WorkflowPayload;
   const { nodes, input } = body;
 
   if (!nodes?.length || !input) {
-    return new Response(
-      JSON.stringify({ error: "Missing nodes or input" }),
-      { status: 400, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: "Missing nodes or input" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const graph = buildGraph(body);
