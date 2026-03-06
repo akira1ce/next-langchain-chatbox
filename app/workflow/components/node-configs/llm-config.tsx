@@ -1,7 +1,7 @@
 "use client";
 
 import { useSettingsStore } from "@/store/settings-store";
-import { useEditorActions } from "../editor-context";
+import { flowContextActions } from "@/store/flow-context";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,12 +22,10 @@ interface LLMConfigProps {
 export function LLMConfig({ nodeId, data }: LLMConfigProps) {
   const providers = useSettingsStore((s) => s.providers);
   const enabledProviders = providers.filter((p) => p.enabled && p.apiKey);
-  const { updateNodeData } = useEditorActions();
-
   const selectedProvider = enabledProviders.find((p) => p.id === data.providerId);
   const availableModels = selectedProvider?.models ?? [];
 
-  const update = (patch: Partial<LLMNodeData>) => updateNodeData(nodeId, patch);
+  const update = (patch: Partial<LLMNodeData>) => flowContextActions.updateNodeData(nodeId, patch);
 
   const handleProviderChange = (providerId: string) => {
     const provider = enabledProviders.find((p) => p.id === providerId);

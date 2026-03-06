@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Workflow, SerializedNode, SerializedEdge } from "@/types";
+import type { Workflow, WorkflowNode, WorkflowEdge } from "@/types";
 
 interface WorkflowState {
   workflows: Workflow[];
@@ -57,7 +57,7 @@ export const workflowActions = {
     }));
   },
 
-  saveSnapshot: (id: string, nodes: SerializedNode[], edges: SerializedEdge[]) => {
+  saveSnapshot: (id: string, nodes: WorkflowNode[], edges: WorkflowEdge[]) => {
     set((s) => ({
       workflows: s.workflows.map((w) =>
         w.id === id ? { ...w, nodes, edges, updatedAt: Date.now() } : w,

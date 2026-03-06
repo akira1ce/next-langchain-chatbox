@@ -14,7 +14,7 @@ import "@xyflow/react/dist/style.css";
 import { useRouter } from "next/navigation";
 import { useWorkflowStore, workflowActions } from "@/store/workflow-store";
 import { chatActions } from "@/store/chat-store";
-import { useEditor, useEditorSnapshot } from "./editor-context";
+import { useFlowContext, flowContextActions } from "@/store/flow-context";
 import { LLMNode } from "./nodes/llm-node";
 import { NodeConfigPanel } from "./node-config-panel";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,7 @@ interface WorkflowCanvasProps {
 
 export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
   const router = useRouter();
-  const editor = useEditor();
-  const snapshot = useEditorSnapshot();
+  const { nodes, edges, selectedNodeId } = useFlowContext();
   const workflows = useWorkflowStore((s) => s.workflows);
   const currentWorkflow = workflows.find((w) => w.id === workflowId);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -37,8 +36,8 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
 
   useEffect(() => {
     const wf = workflows.find((w) => w.id === workflowId);
-    if (wf) editor.load(wf);
-    return () => editor.clear();
+    if (wf) flowContextActions.load(wf);
+    return () => flowContextActions.clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only load on mount / id change
   }, [workflowId]);
 
@@ -47,11 +46,11 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
   useEffect(() => {
     clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      const { nodes, edges } = snapshot();
+      const { nodes, edges } = flowContextActions.snapshot();
       workflowActions.saveSnapshot(workflowId, nodes, edges);
     }, 500);
     return () => clearTimeout(saveTimerRef.current);
-  }, [editor.nodes, editor.edges, workflowId, snapshot]);
+  }, [nodes, edges, workflowId]);
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -69,22 +68,22 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
         x: e.clientX,
         y: e.clientY,
       });
-      const newId = editor.addNode(position);
-      editor.setSelectedNode(newId);
+      const newId = flowContextActions.addNode(position);
+      flowContextActions.setSelectedNode(newId);
     },
-    [rfInstance, editor],
+    [rfInstance],
   );
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: { id: string }) => {
-      editor.setSelectedNode(node.id);
+      flowContextActions.setSelectedNode(node.id);
     },
-    [editor],
+    [],
   );
 
   const onPaneClick = useCallback(() => {
-    editor.setSelectedNode(null);
-  }, [editor]);
+    flowContextActions.setSelectedNode(null);
+  }, []);
 
   const onDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("application/reactflow", "llm");
@@ -92,11 +91,11 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
   };
 
   const handleTryout = () => {
-    if (!currentWorkflow || !editor.nodes.length) return;
-    const { nodes, edges } = snapshot();
-    workflowActions.saveSnapshot(workflowId, nodes, edges);
+    if (!currentWorkflow || !nodes.length) return;
+    const snap = flowContextActions.snapshot();
+    workflowActions.saveSnapshot(workflowId, snap.nodes, snap.edges);
 
-    const freshWorkflow = { ...currentWorkflow, nodes, edges };
+    const freshWorkflow = { ...currentWorkflow, nodes: snap.nodes, edges: snap.edges };
 
     chatActions.createSession({ workflowId: freshWorkflow.id });
     router.push("/chat");
@@ -110,7 +109,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
         <Button
           size="sm"
           className="gap-1.5"
-          disabled={!editor.nodes.length}
+          disabled={!nodes.length}
           onClick={handleTryout}>
           <MessageSquare className="h-3.5 w-3.5" />
           试用
@@ -135,12 +134,12 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
         {/* Canvas */}
         <div className="flex-1" ref={reactFlowWrapper}>
           <ReactFlow
-            nodes={editor.nodes}
-            edges={editor.edges}
+            nodes={nodes}
+            edges={edges}
             nodeTypes={nodeTypes}
-            onNodesChange={editor.onNodesChange}
-            onEdgesChange={editor.onEdgesChange}
-            onConnect={editor.onConnect}
+            onNodesChange={flowContextActions.onNodesChange}
+            onEdgesChange={flowContextActions.onEdgesChange}
+            onConnect={flowContextActions.onConnect}
             onInit={setRfInstance}
             onDragOver={onDragOver}
             onDrop={onDrop}
@@ -156,7 +155,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
         </div>
 
         {/* Right config panel */}
-        {editor.selectedNodeId && <NodeConfigPanel />}
+        {selectedNodeId && <NodeConfigPanel />}
       </div>
     </div>
   );

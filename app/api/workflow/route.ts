@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { buildGraph } from "@/lib/workflow-graph";
-import type { WorkflowEdge } from "@/types";
-import { WorkflowNode } from "@/app/workflow/components/editor-context";
+import type { WorkflowNode, WorkflowEdge } from "@/types";
 
 export interface WorkflowPayload {
   nodes: WorkflowNode[];

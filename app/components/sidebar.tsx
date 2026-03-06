@@ -59,7 +59,7 @@ export function Sidebar() {
                 ? "bg-accent text-accent-foreground"
                 : "text-muted-foreground",
             )}>
-            {session.workflow ? (
+            {session.workflowId ? (
               <Workflow className="h-4 w-4 shrink-0 text-primary" />
             ) : (
               <MessageSquare className="h-4 w-4 shrink-0" />

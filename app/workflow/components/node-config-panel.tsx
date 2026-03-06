@@ -1,13 +1,14 @@
 "use client";
 
-import { useEditor } from "./editor-context";
+import { useFlowContext, flowContextActions } from "@/store/flow-context";
 import { Button } from "@/components/ui/button";
 import { Trash2, X } from "lucide-react";
 import { nodeConfigRegistry } from "./node-configs";
 import type { WorkflowNodeType } from "@/types";
 
 export function NodeConfigPanel() {
-  const { nodes, selectedNodeId, setSelectedNode, removeNode } = useEditor();
+  const nodes = useFlowContext((s) => s.nodes);
+  const selectedNodeId = useFlowContext((s) => s.selectedNodeId);
 
   const node = nodes.find((n) => n.id === selectedNodeId);
   if (!node) return null;
@@ -23,7 +24,7 @@ export function NodeConfigPanel() {
           variant="ghost"
           size="icon"
           className="h-6 w-6"
-          onClick={() => setSelectedNode(null)}
+          onClick={() => flowContextActions.setSelectedNode(null)}
         >
           <X className="h-4 w-4" />
         </Button>
@@ -41,7 +42,7 @@ export function NodeConfigPanel() {
         variant="destructive"
         size="sm"
         className="mt-auto gap-1.5"
-        onClick={() => removeNode(node.id)}
+        onClick={() => flowContextActions.removeNode(node.id)}
       >
         <Trash2 className="h-3.5 w-3.5" />
         Delete Node

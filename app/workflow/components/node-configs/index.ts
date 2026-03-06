@@ -8,10 +8,7 @@ interface NodeConfigProps {
 }
 
 /** 节点类型 → 配置组件注册表 */
-export const nodeConfigRegistry: Record<
-  WorkflowNodeType,
-  ComponentType<NodeConfigProps>
-> = {
+export const nodeConfigRegistry: Record<WorkflowNodeType, ComponentType<NodeConfigProps>> = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- per-node data narrowing handled inside each config component
   llm: LLMConfig as any,
 };

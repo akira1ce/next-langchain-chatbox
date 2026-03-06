@@ -4,7 +4,6 @@ import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ReactFlowProvider } from "@xyflow/react";
 import { useWorkflowStore, workflowActions } from "@/store/workflow-store";
-import { EditorProvider } from "../components/editor-context";
 import { WorkflowCanvas } from "../components/workflow-canvas";
 
 interface WorkflowEditorPageProps {
@@ -30,9 +29,7 @@ export default function WorkflowEditorPage({ params }: WorkflowEditorPageProps) 
 
   return (
     <ReactFlowProvider>
-      <EditorProvider>
-        <WorkflowCanvas workflowId={id} />
-      </EditorProvider>
+      <WorkflowCanvas workflowId={id} />
     </ReactFlowProvider>
   );
 }

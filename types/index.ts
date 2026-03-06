@@ -27,10 +27,10 @@ export interface ProviderMeta {
 
 /** ─── Workflow ─── */
 
-export type WorkflowNodeType = "llm";
+export type WorkflowNodeType = "llm" | "test";
 
 /** LLM 节点配置（provider 由前端选择时一并写入） */
-export interface LLMNodeData {
+export interface LLMNodeData extends Record<string, unknown> {
   label: string;
   systemPrompt: string;
   providerId: string;
