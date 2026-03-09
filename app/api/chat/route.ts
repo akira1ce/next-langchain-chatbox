@@ -4,8 +4,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { createModel } from "@/lib/model-factory";
-import { buildGraph } from "@/lib/workflow-graph";
-import type { Provider, Workflow } from "@/types";
+import type { Provider } from "@/types";
 
 function extractText(msg: UIMessage): string {
   return msg.parts
@@ -14,8 +13,28 @@ function extractText(msg: UIMessage): string {
     .join("");
 }
 
-/** 普通对话 */
-async function handlePlainChat(messages: UIMessage[], provider: Provider, modelId: string) {
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const { messages, provider, modelId } = body as {
+    messages: UIMessage[];
+    provider?: Provider;
+    modelId?: string;
+  };
+
+  if (!provider?.id || !provider?.apiKey) {
+    return new Response(JSON.stringify({ error: "Missing provider" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  if (!modelId) {
+    return new Response(JSON.stringify({ error: "Missing modelId" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const model = createModel(provider, modelId);
 
   const prompt = ChatPromptTemplate.fromMessages([
@@ -46,72 +65,4 @@ async function handlePlainChat(messages: UIMessage[], provider: Provider, modelI
       },
     }),
   });
-}
-
-/** Workflow 驱动对话：取最新用户消息作为 input 执行图 */
-async function handleWorkflowChat(messages: UIMessage[], workflow: Workflow) {
-  const latestUserMsg = [...messages].reverse().find((m) => m.role === "user");
-  const userInput = latestUserMsg ? extractText(latestUserMsg) : "";
-
-  const graph = buildGraph({
-    nodes: workflow.nodes,
-    edges: workflow.edges,
-  });
-
-  return createUIMessageStreamResponse({
-    stream: createUIMessageStream({
-      execute: async ({ writer }) => {
-        const partId = crypto.randomUUID();
-        writer.write({ type: "text-start", id: partId });
-
-        const stream = await graph.stream(
-          { input: userInput, nodeOutputs: {}, lastOutput: "" },
-          { streamMode: "updates" },
-        );
-
-        let finalOutput = "";
-        for await (const update of stream) {
-          const nodeKey = Object.keys(update)[0];
-          if (!nodeKey || nodeKey === "__start__") continue;
-          const nodeState = update[nodeKey] as { lastOutput?: string };
-          if (nodeState.lastOutput) {
-            finalOutput = nodeState.lastOutput;
-          }
-        }
-
-        writer.write({ type: "text-delta", delta: finalOutput, id: partId });
-        writer.write({ type: "text-end", id: partId });
-      },
-    }),
-  });
-}
-
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { messages, provider, modelId, workflow } = body as {
-    messages: UIMessage[];
-    provider?: Provider;
-    modelId?: string;
-    workflow?: Workflow;
-  };
-
-  if (workflow?.nodes?.length) {
-    return handleWorkflowChat(messages, workflow);
-  }
-
-  if (!provider?.id || !provider?.apiKey) {
-    return new Response(JSON.stringify({ error: "Missing provider" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  if (!modelId) {
-    return new Response(JSON.stringify({ error: "Missing modelId" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  return handlePlainChat(messages, provider, modelId);
 }

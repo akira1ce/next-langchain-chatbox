@@ -11,15 +11,14 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import { useRouter } from "next/navigation";
 import { useWorkflowStore, workflowActions } from "@/store/workflow-store";
-import { chatActions } from "@/store/chat-store";
 import { useFlowContext, flowContextActions } from "@/store/flow-context";
 import { LLMNode } from "./nodes/llm-node";
 import { TestNode } from "./nodes/test-node";
 import { NodeConfigPanel } from "./node-config-panel";
+import { WorkflowTryout } from "./workflow-tryout";
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, FlaskConical, MessageSquare } from "lucide-react";
+import { BrainCircuit, FlaskConical, Play } from "lucide-react";
 import type { WorkflowNodeType } from "@/types";
 
 const nodeTypes: NodeTypes = { llm: LLMNode, test: TestNode };
@@ -29,7 +28,7 @@ interface WorkflowCanvasProps {
 }
 
 export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
-  const router = useRouter();
+  const [tryoutOpen, setTryoutOpen] = useState(false);
   const { nodes, edges, selectedNodeId } = useFlowContext();
   const workflows = useWorkflowStore((s) => s.workflows);
   const currentWorkflow = workflows.find((w) => w.id === workflowId);
@@ -96,11 +95,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
     if (!currentWorkflow || !nodes.length) return;
     const snap = flowContextActions.snapshot();
     workflowActions.saveSnapshot(workflowId, snap.nodes, snap.edges);
-
-    const freshWorkflow = { ...currentWorkflow, nodes: snap.nodes, edges: snap.edges };
-
-    chatActions.createSession({ workflowId: freshWorkflow.id });
-    router.push("/chat");
+    setTryoutOpen(true);
   };
 
   return (
@@ -113,8 +108,8 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
           className="gap-1.5"
           disabled={!nodes.length}
           onClick={handleTryout}>
-          <MessageSquare className="h-3.5 w-3.5" />
-          试用
+          <Play className="h-3.5 w-3.5" />
+          Try Out
         </Button>
       </header>
 
@@ -166,6 +161,8 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
         {/* Right config panel */}
         {selectedNodeId && <NodeConfigPanel />}
       </div>
+
+      <WorkflowTryout open={tryoutOpen} onOpenChange={setTryoutOpen} workflowId={workflowId} />
     </div>
   );
 }

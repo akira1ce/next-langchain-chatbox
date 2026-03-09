@@ -6,13 +6,11 @@ import { DefaultChatTransport } from "ai";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { MessageItem } from "@/app/chat/components/message-item";
 import { ModelSelector } from "@/app/settings/components/model-selector";
 import { useSettingsStore } from "@/store/settings-store";
 import { useChatStore, chatActions } from "@/store/chat-store";
-import { Send, Workflow } from "lucide-react";
-import { useWorkflowStore } from "@/store/workflow-store";
+import { Send } from "lucide-react";
 import { toast } from "sonner";
 
 export function ChatPanel() {
@@ -21,17 +19,10 @@ export function ChatPanel() {
   const prevStatusRef = useRef<string>("");
 
   const { activeSessionId, sessions } = useChatStore();
-  const { workflows } = useWorkflowStore();
 
   /* get current session */
   const currentSession = sessions.find((s) => s.id === activeSessionId);
   const sessionModelId = currentSession?.modelId;
-
-  /* get current workflow */
-  const sessionWorkflowId = currentSession?.workflowId;
-  const sessionWorkflow = workflows.find((w) => w.id === sessionWorkflowId);
-
-  const mode = sessionWorkflowId ? "workflow-mode" : "plain-mode";
 
   const handleModelChange = (modelId: string) => {
     if (activeSessionId) {
@@ -46,25 +37,15 @@ export function ChatPanel() {
         body: () => {
           const chatState = useChatStore.getState();
           const session = chatState.sessions.find((s) => s.id === chatState.activeSessionId);
-
           const mid = session?.modelId;
-          const wfId = session?.workflowId;
 
-          /* go workflow mode */
-          if (wfId) {
-            const workflow = useWorkflowStore.getState().workflows.find((w) => w.id === wfId);
-            return { workflow };
-          }
-
-          /* go plain mode */
           if (mid) {
             const settingsState = useSettingsStore.getState();
             const pr = settingsState.providers.find((p) => p.models.some((m) => m.id === mid));
-
             return { provider: pr, modelId: mid };
           }
 
-          return { provider: null, modelId: null, workflow: null };
+          return { provider: null, modelId: null };
         },
       }),
     [],
@@ -123,14 +104,7 @@ export function ChatPanel() {
     <div className="flex h-full flex-col">
       {/* 顶部 */}
       <div className="flex items-center gap-3 border-b px-4 py-2 h-14">
-        {mode === "workflow-mode" ? (
-          <Badge variant="secondary" className="gap-1.5 px-3 py-1">
-            <Workflow className="h-3.5 w-3.5" />
-            {sessionWorkflow?.title}
-          </Badge>
-        ) : (
-          <ModelSelector value={sessionModelId} onValueChange={handleModelChange} />
-        )}
+        <ModelSelector value={sessionModelId} onValueChange={handleModelChange} />
       </div>
 
       {/* 消息列表 */}
@@ -138,9 +112,7 @@ export function ChatPanel() {
         <div className="mx-auto max-w-3xl py-4">
           {messages.length === 0 && (
             <div className="flex h-[50vh] items-center justify-center text-muted-foreground text-center">
-              {mode === "workflow-mode"
-                ? `发送消息以运行「${sessionWorkflow?.title}」工作流`
-                : "Send a message to start chatting."}
+              Send a message to start chatting.
             </div>
           )}
           {messages.map((msg) => (

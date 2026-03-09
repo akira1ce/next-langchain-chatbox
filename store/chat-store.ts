@@ -21,14 +21,13 @@ export const useChatStore = create<ChatState>()(
 const set = useChatStore.setState;
 
 export const chatActions = {
-  createSession: (opts?: { modelId?: string; workflowId?: string }) => {
+  createSession: (opts?: { modelId?: string }) => {
     const id = crypto.randomUUID();
     const now = Date.now();
     const session: ChatSession = {
       id,
       title: "New Chat",
       modelId: opts?.modelId,
-      workflowId: opts?.workflowId,
       createdAt: now,
       updatedAt: now,
       messages: [],

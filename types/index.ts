@@ -80,7 +80,6 @@ export interface ChatSession {
   id: string;
   title: string;
   modelId?: string;
-  workflowId?: string;
   createdAt: number;
   updatedAt: number;
   messages: UIMessage[];
