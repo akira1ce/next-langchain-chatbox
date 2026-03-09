@@ -16,11 +16,13 @@ import { useWorkflowStore, workflowActions } from "@/store/workflow-store";
 import { chatActions } from "@/store/chat-store";
 import { useFlowContext, flowContextActions } from "@/store/flow-context";
 import { LLMNode } from "./nodes/llm-node";
+import { TestNode } from "./nodes/test-node";
 import { NodeConfigPanel } from "./node-config-panel";
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, MessageSquare } from "lucide-react";
+import { BrainCircuit, FlaskConical, MessageSquare } from "lucide-react";
+import type { WorkflowNodeType } from "@/types";
 
-const nodeTypes: NodeTypes = { llm: LLMNode };
+const nodeTypes: NodeTypes = { llm: LLMNode, test: TestNode };
 
 interface WorkflowCanvasProps {
   workflowId: string;
@@ -61,14 +63,14 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
     (e: React.DragEvent) => {
       e.preventDefault();
       if (!rfInstance) return;
-      const type = e.dataTransfer.getData("application/reactflow");
-      if (type !== "llm") return;
+      const type = e.dataTransfer.getData("application/reactflow") as WorkflowNodeType;
+      if (!type) return;
 
       const position = rfInstance.screenToFlowPosition({
         x: e.clientX,
         y: e.clientY,
       });
-      const newId = flowContextActions.addNode(position);
+      const newId = flowContextActions.addNode(type, position);
       flowContextActions.setSelectedNode(newId);
     },
     [rfInstance],
@@ -85,8 +87,8 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
     flowContextActions.setSelectedNode(null);
   }, []);
 
-  const onDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData("application/reactflow", "llm");
+  const onDragStart = (type: WorkflowNodeType) => (e: React.DragEvent) => {
+    e.dataTransfer.setData("application/reactflow", type);
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -125,9 +127,16 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
           <div
             className="flex cursor-grab items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm shadow-sm transition-colors hover:bg-accent active:cursor-grabbing"
             draggable
-            onDragStart={onDragStart}>
+            onDragStart={onDragStart("llm")}>
             <BrainCircuit className="h-4 w-4 text-primary" />
             LLM Node
+          </div>
+          <div
+            className="flex cursor-grab items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm shadow-sm transition-colors hover:bg-accent active:cursor-grabbing"
+            draggable
+            onDragStart={onDragStart("test")}>
+            <FlaskConical className="h-4 w-4 text-orange-500" />
+            Test Node
           </div>
         </aside>
 

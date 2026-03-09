@@ -33,12 +33,28 @@ export function buildGraph({ nodes, edges }: GraphInput) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic graph: node IDs are runtime values
   let graph: any = new StateGraph(WorkflowState);
 
+  // Build predecessor map: nodeId → list of source node IDs
+  const predecessorMap = new Map<string, string[]>();
+  for (const edge of edges) {
+    const preds = predecessorMap.get(edge.target) || [];
+    preds.push(edge.source);
+    predecessorMap.set(edge.target, preds);
+  }
+
   for (const node of nodes) {
     const executor = getExecutor(node.type as WorkflowNodeType);
 
     graph = graph.addNode(node.id, async (state: typeof WorkflowState.State) => {
+      const predecessors = predecessorMap.get(node.id) || [];
+
+      // Source nodes use original input; downstream nodes use predecessor outputs
+      const input =
+        predecessors.length === 0
+          ? state.input
+          : predecessors.map((id) => state.nodeOutputs[id] ?? "").join("\n");
+
       const content = await executor(node.data, {
-        input: state.input,
+        input,
         nodeOutputs: state.nodeOutputs,
       });
 

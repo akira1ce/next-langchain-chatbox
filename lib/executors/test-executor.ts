@@ -1,6 +1,8 @@
 import type { NodeExecutor } from "./index";
+import type { TestNodeData } from "@/types";
 
-/** 测试用 executor：直接返回带 akira 标记的字符串，不调用 LLM */
+/** Test executor：为上一个节点的输出添加自定义前缀 */
 export const testExecutor: NodeExecutor = async (data, ctx) => {
-  return `[akira] node="${data.label}" input="${ctx.input}"`;
+  const { prefix } = data as TestNodeData;
+  return `${prefix}${ctx.input}`;
 };

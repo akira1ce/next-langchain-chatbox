@@ -39,8 +39,14 @@ export interface LLMNodeData extends Record<string, unknown> {
   provider?: Provider;
 }
 
-/** 节点数据联合（后续可扩展更多节点类型） */
-export type WorkflowNodeData = LLMNodeData;
+/** Test 节点配置：为上一个节点输出添加自定义前缀 */
+export interface TestNodeData extends Record<string, unknown> {
+  label: string;
+  prefix: string;
+}
+
+/** 节点数据联合 */
+export type WorkflowNodeData = LLMNodeData | TestNodeData;
 
 /** 序列化的节点（用于持久化 & API 传输） */
 export interface WorkflowNode {

@@ -9,15 +9,29 @@ import {
   type OnNodesChange,
   type OnEdgesChange,
 } from "@xyflow/react";
-import type { WorkflowNodeData, Workflow, WorkflowNode, WorkflowEdge } from "@/types";
+import type {
+  WorkflowNodeData,
+  WorkflowNodeType,
+  LLMNodeData,
+  TestNodeData,
+  Workflow,
+  WorkflowNode,
+  WorkflowEdge,
+} from "@/types";
 
-export type ReactFlowNode = Node<WorkflowNodeData, "llm">;
+export type ReactFlowNode = Node<WorkflowNodeData, WorkflowNodeType>;
 
-const DEFAULT_LLM_DATA: WorkflowNodeData = {
-  label: "LLM",
-  systemPrompt: "You are a helpful assistant.",
-  providerId: "",
-  modelId: "",
+const DEFAULT_DATA: Record<WorkflowNodeType, WorkflowNodeData> = {
+  llm: {
+    label: "LLM",
+    systemPrompt: "You are a helpful assistant.",
+    providerId: "",
+    modelId: "",
+  } satisfies LLMNodeData,
+  test: {
+    label: "Test",
+    prefix: "[TEST] ",
+  } satisfies TestNodeData,
 };
 
 interface FlowContextState {
@@ -58,7 +72,7 @@ export const flowContextActions = {
     return {
       nodes: nodes.map((n) => ({
         id: n.id,
-        type: (n.type ?? "llm") as "llm",
+        type: (n.type ?? "llm") as WorkflowNodeType,
         position: n.position,
         data: n.data,
       })),
@@ -90,14 +104,15 @@ export const flowContextActions = {
     set({ selectedNodeId: id });
   },
 
-  addNode: (position: { x: number; y: number }) => {
+  addNode: (type: WorkflowNodeType, position: { x: number; y: number }) => {
     nodeCounter += 1;
-    const id = `llm_${Date.now()}_${nodeCounter}`;
+    const id = `${type}_${Date.now()}_${nodeCounter}`;
+    const defaults = DEFAULT_DATA[type];
     const newNode: ReactFlowNode = {
       id,
-      type: "llm",
+      type,
       position,
-      data: { ...DEFAULT_LLM_DATA, label: `LLM ${nodeCounter}` },
+      data: { ...defaults, label: `${defaults.label} ${nodeCounter}` },
     };
     set((s) => ({ nodes: [...s.nodes, newNode] }));
     return id;
