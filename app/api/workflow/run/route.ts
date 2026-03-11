@@ -43,20 +43,8 @@ export async function POST(req: NextRequest) {
         const partId = crypto.randomUUID();
         writer.write({ type: "text-start", id: partId });
 
-        const stream = await graph.stream(
-          { input, nodeOutputs: {}, lastOutput: "" },
-          { streamMode: "updates" },
-        );
-
-        let finalOutput = "";
-        for await (const update of stream) {
-          const nodeKey = Object.keys(update)[0];
-          if (!nodeKey || nodeKey === "__start__") continue;
-          const nodeState = update[nodeKey] as { lastOutput?: string };
-          if (nodeState.lastOutput) {
-            finalOutput = nodeState.lastOutput;
-          }
-        }
+        const result = await graph.invoke({ input, nodeOutputs: {}, lastOutput: "" });
+        const finalOutput = result.lastOutput;
 
         const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
         for (const char of finalOutput) {
