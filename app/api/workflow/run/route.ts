@@ -58,7 +58,11 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        writer.write({ type: "text-delta", delta: finalOutput, id: partId });
+        const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+        for (const char of finalOutput) {
+          writer.write({ type: "text-delta", delta: char, id: partId });
+          await delay(15);
+        }
         writer.write({ type: "text-end", id: partId });
       },
     }),
